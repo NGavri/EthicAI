@@ -55,9 +55,20 @@ def ensure_binary_labels(y):
 def generate_pdf_report(report_text, shap_plot=None, lime_plot=None):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
+
+    # Debug: Check current working directory and font file path
+    st.write("Current working directory:", os.getcwd())
     font_path = os.path.join("fonts", "DejaVuSans.ttf")
-    pdf.add_font("DejaVu", "", font_path, uni=True)
-    pdf.set_font("DejaVu", "", 12)
+    st.write("Font path:", font_path)
+    st.write("Font file exists:", os.path.exists(font_path))
+
+    try:
+        pdf.add_font("DejaVu", "", font_path, uni=True)
+        pdf.set_font("DejaVu", "", 12)
+    except Exception as e:
+        st.error(f"Failed to load custom font: {e}")
+        pdf.set_font("Arial", "", 12)
+
     pdf.add_page()
 
     # Text first
