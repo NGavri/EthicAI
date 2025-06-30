@@ -10,7 +10,6 @@ from sklearn.preprocessing import LabelEncoder
 from fpdf import FPDF
 import os
 import json
-from pathlib import Path
 
 from fairnessMetrics import find_sensitive_features, eval_fairness_metrics, interpret_metrics
 from privacyEvaluation import evaluate_privacy
@@ -18,11 +17,14 @@ from ethicalScore import calculate_ethical_score
 from explainability import explain_with_shap, explain_with_lime
 from reportGenerator import generate_text_report
 
+# Page configuration
 st.set_page_config(page_title="EthicAI", page_icon="logo.png", layout="wide")
 st.title("EthicAI")
 st.sidebar.title("EthicAI")
 
 COUNTER_PATH = "evaluated_counter.json"
+
+# -------------------- Utilities --------------------
 
 def read_model_count():
     try:
@@ -49,8 +51,7 @@ def ensure_binary_labels(y):
         if unique_vals <= {0, 1} or unique_vals <= {-1, 1}:
             return y
         else:
-            y_bin = y.apply(lambda x: 1 if x == max(unique_vals) else 0) if hasattr(y, 'apply') else [1 if x == max(unique_vals) else 0 for x in y]
-            return y_bin
+            return y.apply(lambda x: 1 if x == max(unique_vals) else 0) if hasattr(y, 'apply') else [1 if x == max(unique_vals) else 0 for x in y]
 
 def generate_pdf_report(report_text, shap_plot=None, lime_plot=None):
     pdf = FPDF()
@@ -58,7 +59,8 @@ def generate_pdf_report(report_text, shap_plot=None, lime_plot=None):
     pdf.set_font("Arial", "", 12)
     pdf.add_page()
 
-    for line in report_text.split('\n'):
+    safe_text = report_text.encode("ascii", "ignore").decode("ascii")
+    for line in safe_text.split('\n'):
         pdf.multi_cell(0, 10, line)
 
     if shap_plot:
@@ -87,6 +89,8 @@ def get_report_filename(model_name):
     safe_model_name = "".join(c for c in model_name if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(" ", "_")
     return f"Ethical_Report_{safe_model_name}_{date_str}.pdf"
 
+# -------------------- Navigation --------------------
+
 if 'page' not in st.session_state:
     st.session_state.page = "Home"
 
@@ -98,6 +102,8 @@ if st.sidebar.button("About"):
     st.session_state.page = "About"
 if st.sidebar.button("Feedback"):
     st.session_state.page = "Feedback"
+
+# -------------------- Pages --------------------
 
 if st.session_state.page == "Home":
     model_count = read_model_count()
@@ -128,8 +134,8 @@ if st.session_state.page == "Home":
             else:
                 X = df.drop(columns=[target_column])
                 y = df[target_column]
-
                 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
                 sensitive_features = find_sensitive_features(X)
                 if sensitive_features:
                     st.info(f"Automatically detected sensitive feature(s): {sensitive_features}")
@@ -143,12 +149,10 @@ if st.session_state.page == "Home":
                     if st.button("Evaluate"):
                         with st.spinner("Evaluating model..."):
                             y_test_bin = ensure_binary_labels(y_test)
-                            if y_test_bin is None:
-                                st.stop()
+                            if y_test_bin is None: st.stop()
                             y_pred = model.predict(X_test)
                             y_pred_bin = ensure_binary_labels(pd.Series(y_pred))
-                            if y_pred_bin is None:
-                                st.stop()
+                            if y_pred_bin is None: st.stop()
 
                             fairness_results = eval_fairness_metrics(model, X_test, y_test_bin, sensitive_features)
                             fairness_interpret = interpret_metrics(fairness_results)
@@ -188,12 +192,7 @@ if st.session_state.page == "Home":
                         pdf_buffer = generate_pdf_report(report, shap_plot=shap_fig, lime_plot=lime_result["lime_plot"])
                         filename = get_report_filename(model_name_input)
 
-                        st.download_button(
-                            label="Download PDF Report",
-                            data=pdf_buffer,
-                            file_name=filename,
-                            mime="application/pdf"
-                        )
+                        st.download_button("Download PDF Report", data=pdf_buffer, file_name=filename, mime="application/pdf")
         except Exception as e:
             st.error(f"Something went wrong during evaluation: {e}")
 
@@ -217,17 +216,15 @@ elif st.session_state.page == "Evaluation":
         - SHAP (Global Feature Importance)
         - LIME (Local Explanation)
 
-    - **Report**: Automatically generated report summarizing all findings and scores. (Still improving the recommendations section. Progress is underway!)
+    - **Report**: Automatically generated report summarizing all findings and scores.
     """)
+
     st.subheader("Why should you trust this evaluation?")
     st.markdown("""
     Every metric used here is backed by academic research and widely accepted in fairness and privacy audits. 
     The explainability tools (SHAP and LIME) are industry standards.
 
-    That said, this tool is still evolving. It's built with transparency and accountability in mind, and the entire process 
-    is kept open so **you can verify, interpret, and question** the results yourself.
-
-    Trust isn't given; it’s built and I’m working on it continuously.
+    This tool is evolving — it's built with transparency and accountability in mind, so **you can verify, interpret, and question** the results yourself.
     """)
 
 elif st.session_state.page == "About":
@@ -242,7 +239,7 @@ elif st.session_state.page == "About":
 
     ---
     **Curious about AI beyond the usual?**  
-    I also run a blog — [**Synapse and Steel**](https://synapseandsteel.wordpress.com). It's part journal, part tech talk, and part “oops, I did that.”
+    I also run a blog — [**Synapse and Steel**](https://synapseandsteel.wordpress.com).
     """)
 
 elif st.session_state.page == "Feedback":
@@ -251,15 +248,7 @@ elif st.session_state.page == "Feedback":
 
     with st.form("feedback_form"):
         feedback_text = st.text_area("Enter your feedback here:")
-
-        st.markdown("### Rate EthicAI")
-        rating = st.radio(
-            "How would you rate your experience?",
-            options=[1, 2, 3, 4, 5],
-            format_func=lambda x: "⭐" * x,
-            horizontal=True
-        )
-
+        rating = st.radio("How would you rate your experience?", options=[1, 2, 3, 4, 5], format_func=lambda x: "⭐" * x, horizontal=True)
         submit_feedback = st.form_submit_button("Submit Feedback")
 
     if submit_feedback:
