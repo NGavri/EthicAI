@@ -72,7 +72,7 @@ def generate_pdf_report(report_text, shap_plot=None, lime_plot=None):
         st.error(f"Failed to load custom font: {e}")
         pdf.set_font("Arial", "", 12)
 
-        pdf.add_page()
+    pdf.add_page()
 
     # Text first
     for line in report_text.split('\n'):
