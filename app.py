@@ -107,12 +107,12 @@ if st.sidebar.button("Feedback"):
 
 if st.session_state.page == "Home":
     model_count = read_model_count()
-    st.markdown(f"""
-    <h3 style='font-weight:bold;'>
-      Models Evaluated So Far: 
-      <span style='color:green; font-size:48px; font-weight:bold;'>{model_count}</span>
-    </h3>
-    """, unsafe_allow_html=True)
+    #st.markdown(f"""
+    #<h3 style='font-weight:bold;'>
+      #Models Evaluated So Far: 
+      #<span style='color:green; font-size:48px; font-weight:bold;'>{model_count}</span>
+    #</h3>
+    #""", unsafe_allow_html=True)
 
     st.subheader("Upload your model and dataset")
     model_file = st.file_uploader("Upload your AI model", type=["pkl", "joblib"])
