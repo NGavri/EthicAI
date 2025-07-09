@@ -15,7 +15,6 @@ Whether you're a student, researcher, or developer, EthicAI helps you build more
 - 📊 **Explainability** — SHAP (global) and LIME (local) visualizations
 - 📄 **PDF Report Generation** — Downloadable ethical evaluation reports
 - 💬 **Feedback System** — Users can send anonymous feedback
-- 📈 **Live Model Count** — Displays total models evaluated so far
 
 ---
 
