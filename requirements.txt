@@ -9,5 +9,3 @@ joblib
 fairlearn
 diffprivlib
 numpy
-gspread
-oauth2client
